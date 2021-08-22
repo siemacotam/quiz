@@ -7,9 +7,17 @@ const gameBoard = document.querySelector('#game-board')
 const h2 = document.querySelector('h2')
 
 function fillQuestionElements(data) {
+
+    console.log(data)
     if(data.winner === true) {
         gameBoard.style.display = 'none';
         h2.innerText = 'Wygrana !'
+        return;
+    }
+
+    if(data.loser === true){
+        gameBoard.style.display = 'none';
+        h2.innerText = 'Nie poszło tym razem, spróbuj ponownie !'
         return;
     }
 
@@ -56,3 +64,66 @@ for(const button of buttons){
         sendAnswer(answerIndex);
     });
 }
+
+const tipDiv = document.querySelector('#tip')
+
+function handleFriendAnswer(data) {
+    tipDiv.innerText = data.text
+}
+
+function callToAFriend() {
+    fetch('/help/friend', {
+        method: 'GET',
+    })
+    .then(r => r.json())
+    .then(data =>{
+        handleFriendAnswer(data)
+    });
+}
+document.querySelector('#callToAFriend').addEventListener('click', callToAFriend);
+
+
+function handleHalfOnHalfAnswer(data) {
+    if(typeof data.text === 'string'){
+        tipDiv.innerText = data.text;
+    } else {
+        for(const button of buttons) {
+            if(data.answersToRemove.indexOf(button.innerText) > -1) {
+                button.innerText = '';
+            }
+        }
+    }
+}
+
+function halfOnHalf() {
+    fetch('/help/half', {
+        method: 'GET',
+    })
+    .then(r => r.json())
+    .then(data =>{
+        handleHalfOnHalfAnswer(data)
+    });
+}
+document.querySelector('#halfOnHalf').addEventListener('click', halfOnHalf);
+
+function handleCrowdAnswer(data) {
+    if(typeof data.text === 'string'){
+        tipDiv.innerText = data.text;
+    } else {
+        data.chart.forEach((percent, index ) => {
+            buttons[index].innerText = buttons[index].innerText + `: ${percent} %`
+        })
+}
+}
+
+
+function questionToTheCrowd() {
+    fetch('/help/crowd', {
+        method: 'GET',
+    })
+    .then(r => r.json())
+    .then(data =>{
+        handleCrowdAnswer(data)
+    });
+}
+document.querySelector('#questionToTheCrowd').addEventListener('click', questionToTheCrowd);
